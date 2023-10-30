@@ -98,5 +98,6 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
         for i in range(len(dataloader.dataset.classes)):
             print('Accuracy of {} : {} %'.format(dataloader.dataset.classes[i], 100 * class_correct[i] / class_total[i]))
 
-
+if __name__ == '__main__':
+    main()
         
