@@ -1,6 +1,6 @@
 import click
 import models
-import training.train as train
+from training import train
 import torchvision, torchvision.transforms as transforms
 import json
 import models
@@ -42,7 +42,7 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
     console_formatter = logging.Formatter('%(levelname)s: %(message)s')
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
-    
+
     if load_model:
         model = models.load_model(model_path)
     else:

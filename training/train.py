@@ -1,4 +1,4 @@
-import custom_lr_schedulers
+from . import  custom_lr_schedulers
 import torch.optim.lr_scheduler as lr_scheduler
 import logging
 import torch.nn as nn
