@@ -22,7 +22,11 @@ import torch
 @click.option('--config', type=str, default='config.json', help='Path to config file for specifying new model architectures')
 @click.option('--log_dir', type=str, default='logs', help='Path to log directory')
 @click.option('--loglevel', type=str, default='INFO', help='Log level')
-def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluate, config, log_dir, loglevel):
+def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluate, config, log_dir, loglevel, seed):
+    # Set seed for reproducibility
+    torch.manual_seed(seed)
+
+    # Set up logging
     if loglevel not in ['DEBUG','INFO','WARNING','ERROR','CRITICAL']:
         raise ValueError('Log level {} not supported'.format(loglevel))
     # Create logger and set its level to DEBUG
@@ -43,6 +47,7 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
+    
     if load_model:
         model = models.load_model(model_path)
     else:
