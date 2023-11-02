@@ -46,9 +46,9 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
         input_transform = transforms.Compose(input_transform)
         output_transform = []
         if "output_transform" in config:
-            for transform in config["output_transform"]:
+            for transform["type"] in config["output_transform"]:
                 if hasattr(transforms,transform):
-                    output_transform.append(getattr(transforms,transform))
+                    output_transform.append(getattr(transforms,transform)(**transform["args"]))
                 else:
                     raise ValueError("Transform {} not found".format(transform))
         output_transform = transforms.Compose(output_transform)
