@@ -5,6 +5,7 @@ import torchvision, torchvision.transforms as transforms
 import json
 import models
 import os
+import logging
 from datetime import datetime
 import torch
 
@@ -17,11 +18,31 @@ import torch
 @click.option('--model_path', type=str, default='model.pt', help='Path to save/load the model')
 @click.option('--model', type=str, default='resnet18', help='Model to use')
 @click.option('--load_model', type=bool, default=False, help='Whether to load the model')
-@click.option('--plot_loss', type=bool, default=True, help='Whether to plot the training loss')
 @click.option('--evaluate', type=bool, default=True, help='Whether to evaluate the model')
 @click.option('--config', type=str, default='config.json', help='Path to config file for specifying new model architectures')
 @click.option('--log_dir', type=str, default='logs', help='Path to log directory')
-def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluate, config, log_dir):
+@click.option('--loglevel', type=str, default='INFO', help='Log level')
+def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluate, config, log_dir, loglevel):
+    if loglevel not in ['DEBUG','INFO','WARNING','ERROR','CRITICAL']:
+        raise ValueError('Log level {} not supported'.format(loglevel))
+    # Create logger and set its level to DEBUG
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    # Create and configure a file handler to write all logs to a file
+    file_handler = logging.FileHandler(os.path.join(log_dir,'log'+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.log'))
+    file_handler.setLevel(logging.DEBUG)  # Capture all logs
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
+
+    # Create and configure a console handler to only display logs from WARNING level and above
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(getattr(logger,loglevel))  # Only display WARNING and above
+    console_formatter = logging.Formatter('%(levelname)s: %(message)s')
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+    
     if load_model:
         model = models.load_model(model_path)
     else:
