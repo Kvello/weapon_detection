@@ -1,6 +1,6 @@
 import custom_lr_schedulers
 import torch.optim.lr_scheduler as lr_scheduler
-import torch
+import logging
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as data
@@ -50,6 +50,7 @@ def train(model:nn.Module,
     elif loss.lower()=="nll":
         loss_fn = nn.NLLLoss()
     else:
+        logging.error("Loss function {} not implemented yet".format(loss))
         raise ValueError("Loss function {} not implemented yet".format(loss))
     if isinstance(lr,Tuple):
         lr_init, lr_func = lr
@@ -61,15 +62,18 @@ def train(model:nn.Module,
                 assert isinstance(lr,lr_scheduler.LRScheduler,
                         "Custom learning rate scheduler must be a subclass of torch.optim.lr_scheduler.LRScheduler")
             else:
+                logging.error("Learning rate scheduler {} not implemented yet".format(lr))
                 raise ValueError("Learning rate scheduler {} not implemented yet".format(lr))
         elif isinstance(lr,lr_scheduler.LRScheduler):
             scheduler = lr
         else:
+            logging.error("Learning rate scheduler {} not implemented yet".format(lr))
             raise ValueError("Learning rate scheduler {} not implemented yet".format(lr))
     elif isinstance(lr,float):
         lr_init = lr
         scheduler = None
     else:
+        logging.error("Learning rate {} not implemented yet".format(lr))
         raise ValueError("Learning rate {} not implemented yet".format(lr))
     
         
@@ -77,7 +81,14 @@ def train(model:nn.Module,
         optimizer = optim.SGD(model.parameters(), lr=lr_init, momentum=momentum, weight_decay=weight_decay)
     elif optimizer.lower()=="adam":
         optimizer = optim.Adam(model.parameters(), lr=lr_init, weight_decay=weight_decay)
+        if momentum != 0:
+            logging.warning("Momentum is not used for Adam optimizer, ignored")
+    elif optimizer.lower()=="AdamW":
+        if momentum != 0:
+            logging.warning("Momentum is not used for AdamW optimizer, ignored")
+        optimizer = optim.AdamW(model.parameters(), lr=lr_init, weight_decay=weight_decay)
     else:
+        logging.error("Optimizer {} not implemented yet".format(optimizer))
         raise ValueError("Optimizer {} not implemented yet".format(optimizer))
     
     if scheduler is not None:
