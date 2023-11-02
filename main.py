@@ -45,7 +45,7 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
 
     # Create and configure a console handler to only display logs from WARNING level and above
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(getattr(logger,loglevel))  # Only display WARNING and above
+    console_handler.setLevel(getattr(logging,loglevel,None))  # Only display WARNING and above
     console_formatter = logging.Formatter('%(levelname)s: %(message)s')
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
