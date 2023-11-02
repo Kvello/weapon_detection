@@ -34,6 +34,9 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
     logger.setLevel(logging.DEBUG)
 
     # Create and configure a file handler to write all logs to a file
+    log_file_name = 'log'+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.log'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     file_handler = logging.FileHandler(os.path.join(log_dir,'log'+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.log'))
     file_handler.setLevel(logging.DEBUG)  # Capture all logs
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -47,7 +50,7 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
-    
+
     if load_model:
         model = models.load_model(model_path)
     else:
