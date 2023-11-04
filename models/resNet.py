@@ -71,7 +71,7 @@ class ResidualBlock(nn.Module):
             print(out.shape)
             out = layer(out)
 
-        out += shortcut
+        out = out + shortcut
         return self.activation(out)
 
 
