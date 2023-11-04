@@ -154,5 +154,6 @@ class ResidualNetwork(nn.Module):
     def forward(self, x):
         out = x
         for block in self.blocks:
+            print(out.shape)
             out = block(x)
         return out
