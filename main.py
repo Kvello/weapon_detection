@@ -153,6 +153,10 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
     if evaluate:
         dataloader = torchvision.datasets.ImageFolder(
             test_dir, transform=input_transform)
+        dataloader = torch.utils.data.DataLoader(
+            dataloader, batch_size=training_config['batch_size'],
+            shuffle=training_config['shuffle'],
+            num_workers=training_config['num_workers'])
         model.eval()
         correct = 0
         total = 0

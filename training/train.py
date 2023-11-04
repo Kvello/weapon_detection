@@ -10,19 +10,23 @@ from tqdm import tqdm
 from typing import Dict, Union, Tuple
 from collections import deque
 import matplotlib.pyplot as plt
+from collections import namedtuple
+
+ValidationResult = namedtuple("ValidationResult",["loss","accuracy"])
 
 class EarlyStopper:
-    def __init__(self, patience=1, min_delta=0):
+    def __init__(self, patience=1, min_delta=0, metric="loss"):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
+        self.metric = metric
         self.min_validation_loss = float('inf')
 
-    def early_stop(self, validation_loss,quiet=False):
-        if validation_loss < self.min_validation_loss:
-            self.min_validation_loss = validation_loss
+    def early_stop(self, val_result:ValidationResult,quiet=False):
+        if val_result[self.metric] < self.min_validation_loss:
+            self.min_validation_loss = val_result[self.metric]
             self.counter = 0
-        elif validation_loss > (self.min_validation_loss + self.min_delta):
+        elif val_result[self.metric]> (self.min_validation_loss + self.min_delta):
             self.counter += 1
             if not quiet:
                 print("Validation loss increased, counter: {}".format(self.counter))
@@ -35,8 +39,7 @@ class EarlyStopper:
 def validate(model:nn.Module,
              valloader:data.DataLoader,
                 loss_fn:nn.Module,
-                device:str="cpu",
-                ):
+                device:str="cpu")->ValidationResult:
     r"""
     General purpose validation function
     Args:
@@ -58,7 +61,8 @@ def validate(model:nn.Module,
             correct += pred.eq(y.view_as(pred)).sum().item()
     loss /= len(valloader)
     accuracy = correct / len(valloader.dataset)
-    return loss, accuracy
+
+    return ValidationResult(loss,accuracy)
 
 def train(model:nn.Module,
           dataloader:data.DataLoader,
@@ -169,10 +173,10 @@ def train(model:nn.Module,
         if not quiet:
             print("Epoch {}: Loss: {}".format(epoch,epoch_loss))
             if valloader is not None:
-                val_loss, val_accuracy = validate(model,valloader,loss_fn,device)
-                print("Validation loss: {}, Validation accuracy: {}".format(val_loss,val_accuracy))
+                val_results= validate(model,valloader,loss_fn,device)
+                print("Validation loss: {}, Validation accuracy: {}".format(val_results["loss"],val_results["accuracy"]))
         if early_stopper is not None:
-            if early_stopper.early_stop(val_loss,quiet):
+            if early_stopper.early_stop(val_results,quiet):
                 print("Early stopping")
                 break
         if plot_loss:
