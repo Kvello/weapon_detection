@@ -1,5 +1,5 @@
 import click
-import models
+from .models import *
 from training import train
 import torchvision, torchvision.transforms as transforms
 import json
