@@ -114,7 +114,7 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
         training_config.pop('batch_size')
         training_config.pop('shuffle')
         training_config.pop('num_workers')
-        
+        training_config["device"] = config["device"]
         train.train(model, dataloader, **training_config)
         if save_model:
             if os.path.exists(model_path):
