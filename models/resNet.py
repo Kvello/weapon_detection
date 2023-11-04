@@ -68,6 +68,7 @@ class ResidualBlock(nn.Module):
 
         out = x
         for layer in self.layers:
+            print(out.shape)
             out = layer(out)
 
         out += shortcut
