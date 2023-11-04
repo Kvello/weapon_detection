@@ -171,7 +171,6 @@ def train(model:nn.Module,
             epoch_loss += ls.item()
             ls.backward()
             optimizer.step()
-            print("Optimzer step")
             if scheduler is not None:
                 scheduler.step()
         epoch_loss /= len(dataloader)
