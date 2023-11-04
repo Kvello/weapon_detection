@@ -150,19 +150,23 @@ def train(model:nn.Module,
         line, = ax.plot([], loss_history)
     for epoch in tqdm(range(epochs)):
         model.train()
+        epoch_loss = 0
         for i, (x,y) in enumerate(dataloader):
             x = x.to(device)
             y = y.to(device)
             optimizer.zero_grad()
             y_pred = model(x)
-            loss = loss_fn(y_pred,y)
-            loss.backward()
+            ls = loss_fn(y_pred,y)
+            print(ls)
+            epoch_loss += ls.item()
+            ls.backward()
             optimizer.step()
             print("Optimzer step")
             if scheduler is not None:
                 scheduler.step()
+        epoch_loss /= len(dataloader)
         if not quiet:
-            print("Epoch {}: Loss: {}".format(epoch,loss.item()))
+            print("Epoch {}: Loss: {}".format(epoch,epoch_loss))
             if valloader is not None:
                 val_loss, val_accuracy = validate(model,valloader,loss_fn,device)
                 print("Validation loss: {}, Validation accuracy: {}".format(val_loss,val_accuracy))
