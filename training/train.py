@@ -27,7 +27,7 @@ class EarlyStopper:
         if self.metric == "loss":
             val = val_result.loss
         else:
-            val = val_result.accuracy
+            val = -val_result.accuracy
         if val < self.min_validation_loss:
             self.min_validation_loss = val
             self.counter = 0
