@@ -109,10 +109,6 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
 
         dataloader = torchvision.datasets.ImageFolder(
             train_dir, transform=input_transform, target_transform=output_transform)
-        dataloader = torch.utils.data.DataLoader(
-            dataloader, batch_size=training_config['batch_size'], 
-            shuffle=training_config['shuffle'], 
-            num_workers=training_config['num_workers'])
         training_config.pop('batch_size')
         training_config.pop('shuffle')
         training_config.pop('num_workers')
@@ -129,8 +125,15 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
             vl_size = int(vl_size*len(dataloader))
             dataloader, valloader = torch.utils.data.random_split(
                 dataloader, [tr_size, vl_size])
-            training_config["valloader"] = valloader
+            training_config["valloader"] = torch.utils.data.DataLoader(
+                valloader, batch_size=training_config['batch_size'],
+                shuffle=training_config['shuffle'],
+                num_workers=training_config['num_workers'])
             
+        dataloader = torch.utils.data.DataLoader(
+            dataloader, batch_size=training_config['batch_size'], 
+            shuffle=training_config['shuffle'], 
+            num_workers=training_config['num_workers'])
 
         train.train(model, dataloader, **training_config)
         if save_model:
