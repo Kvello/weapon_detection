@@ -175,7 +175,7 @@ def train(model:nn.Module,
                 print("Early stopping")
                 break
         if plot_loss:
-            loss_history.append(loss.item())
+            loss_history.append(epoch_loss)
             line.set_xdata(range(len(loss_history)))
             line.set_ydata(loss_history)
             plt.draw()
