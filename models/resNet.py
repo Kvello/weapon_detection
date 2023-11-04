@@ -117,20 +117,26 @@ class ResidualNetwork(nn.Module):
         img_size = np.array(img_size[1:])
         if isinstance(start_block, nn.Module):
             self.blocks.append(start_block)
-            img_size = (img_size-(start_block.kernel_size//2)*2 +
-                        2*start_block.padding)//start_block.stride
+            img_size = (img_size-start_block.dialation\
+                        *(start_block.kernel_size-1)\
+                        -1+2*start_block.padding)\
+                        //start_block.stride+1
         else:
+            ker_size = start_block[1]
+            out_channels = start_block[0]
+            stride = start_block[2]
+            padding = start_block[3]
             self.blocks.append(nn.Conv2d(
-                self.in_channels, out_channels=start_block[0], kernel_size=start_block[1], stride=start_block[2], padding=start_block[3]))
-            img_size = (img_size-(start_block[1]//2)*2)//start_block[2]
+                self.in_channels, out_channels=out_channels, kernel_size=ker_size, stride=stride, padding=padding))
+            img_size = (img_size-ker_size+2*padding)//stride+1
         self.blocks.append(nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
-        img_size = (img_size-(3//2)*2)//2
+        img_size = (img_size-3+2*1)//2+1
         in_chn = start_block[0]
         for block in block_list:
             if isinstance(block, nn.Module):
                 self.add_block(block)
-                img_size = (img_size-(block.kernel_size//2) *
-                            2 + 2*block.padding)//block.stride
+                img_size = (img_size-block.dialation*(block.kernel_size-1) -\
+                            1+2*block.padding)//block.stride+1
                 in_chn = block.out_channels
             else:
                 out_channels, stride, depth = block
@@ -142,10 +148,10 @@ class ResidualNetwork(nn.Module):
                                                  padding=padding, bias=bias, batchnorm=batchnorm,
                                                  dropout_prob=dropout_prob, activation=activation,
                                                  depth=depth, padding_mode=padding_mode))
-                img_size = (img_size-(ker_size//2)*2 + 2*padding)//stride
+                img_size = img_size//stride
                 in_chn = out_channels
         self.blocks.append(nn.AvgPool2d(kernel_size=3, stride=2, padding=1))
-        img_size = (img_size-(3//2)*2)//2
+        img_size = (img_size-3+2*1)//2+1
         self.blocks.append(nn.Flatten())
         self.blocks.append(
             nn.Linear(in_chn*img_size[0]*img_size[1], num_classes))
