@@ -12,8 +12,8 @@ import torch
 
 
 @click.command()
-@click.option('--train_dir', type=str, default='data/train', help='Path to traing dataset')
-@click.option('--test_dir', type=str, default='data/test', help='Path to test dataset')
+@click.option('--train_dir', type=str, default='data/raw/train', help='Path to traing dataset')
+@click.option('--test_dir', type=str, default='data/raw/test', help='Path to test dataset')
 @click.option('--seed', type=int, default=1, help='Random seed')
 @click.option('--save_model', type=bool, default=False, help='Whether to save the model')
 @click.option('--model_path', type=str, default='model.pt', help='Path to save/load the model')
