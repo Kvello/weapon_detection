@@ -74,7 +74,7 @@ class ResidualBlock(nn.Module):
         return self.activation()(out)
 
 
-class ResNet(nn.Module):
+class ResidualNetwork(nn.Module):
     r"""
     General ResNet model used for classification. Following the general ideas of https://arxiv.org/pdf/1512.03385.pdf
     Args:
@@ -96,8 +96,8 @@ class ResNet(nn.Module):
 
     def __init__(self, num_classes: int,
                  image_size: Tuple[int, int, int] = (3, 224, 224),
-                 start_block: Union[Tuple[int, int, int,
-                                          int], nn.Module] = (64, 7, 2, 1),
+                 start_block: Union[Tuple[int, int, int,int],
+                                     nn.Module] = (64, 7, 2, 1),
                  block_list: Union[List[Tuple[int, int, int]], List[ResidualBlock]] =
                  [(64, 1, 2), (64, 2, 2), (128, 1, 2), (128, 2, 2),
                   (256, 1, 2), (256, 2, 2), (512, 1, 2)(512, 2, 2)],
