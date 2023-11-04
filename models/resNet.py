@@ -155,6 +155,6 @@ class ResidualNetwork(nn.Module):
         out = x
         for block in self.blocks:
             print(block,out.shape)
-            out = block(x)
+            out = block(out)
             print("After block: ",out.shape)
         return out
