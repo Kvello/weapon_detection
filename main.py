@@ -26,6 +26,7 @@ import torch
 def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, config, log_dir, loglevel, seed):
     # Set seed for reproducibility
     torch.manual_seed(seed)
+    torch.autograd.set_detect_anomaly(True)
 
     # Set up logging
     if loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
