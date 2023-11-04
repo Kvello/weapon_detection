@@ -107,6 +107,14 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
 
         dataloader = torchvision.datasets.ImageFolder(
             train_dir, transform=input_transform, target_transform=output_transform)
+        dataloader = torch.utils.data.DataLoader(
+            dataloader, batch_size=training_config['batch_size'], 
+            shuffle=training_config['shuffle'], 
+            num_workers=training_config['num_workers'])
+        training_config.pop('batch_size')
+        training_config.pop('shuffle')
+        training_config.pop('num_workers')
+        
         train.train(model, dataloader, **training_config)
         if save_model:
             if os.path.exists(model_path):
