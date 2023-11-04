@@ -144,7 +144,7 @@ def train(model:nn.Module,
         optimizer = optim.Adam(model.parameters(), lr=lr_init, weight_decay=weight_decay)
         if momentum != 0:
             logging.warning("Momentum is not used for Adam optimizer, ignored")
-    elif optimizer.lower()=="AdamW":
+    elif optimizer.lower()=="adamw":
         if momentum != 0:
             logging.warning("Momentum is not used for AdamW optimizer, ignored")
         optimizer = optim.AdamW(model.parameters(), lr=lr_init, weight_decay=weight_decay)
