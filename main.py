@@ -122,7 +122,7 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
                 **training_config["early_stopper"])
             tr_size, vl_size = config["train_data_split"].values()
             tr_size = int(tr_size*len(dataloader))
-            vl_size = int(vl_size*len(dataloader))
+            vl_size = len(dataloader)-tr_size
             dataloader, valloader = torch.utils.data.random_split(
                 dataloader, [tr_size, vl_size])
             training_config["valloader"] = torch.utils.data.DataLoader(
