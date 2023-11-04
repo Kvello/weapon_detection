@@ -108,6 +108,7 @@ def train(model:nn.Module,
             loss = loss_fn(y_pred,y)
             loss.backward()
             optimizer.step()
+            print("Optimzer step")
             if scheduler is not None:
                 scheduler.step()
         if not quiet:
