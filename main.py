@@ -83,16 +83,16 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
         input_transform = []
         if "input_transform" in config:
             for transform in config["input_transform"]:
-                if hasattr(transforms,transform):
-                    input_transform.append(getattr(transforms,transform))
+                if hasattr(transforms,transform["type"]):
+                    input_transform.append(getattr(transforms,transform["type"])(**transform["args"]))
                 else:
                     raise ValueError("Transform {} not found".format(transform))
         input_transform = transforms.Compose(input_transform)
         output_transform = []
         if "output_transform" in config:
-            for transform["type"] in config["output_transform"]:
-                if hasattr(transforms,transform):
-                    output_transform.append(getattr(transforms,transform)(**transform["args"]))
+            for transform in config["output_transform"]:
+                if hasattr(transforms,transform["type"]):
+                    output_transform.append(getattr(transforms,transform["type"])(**transform["args"]))
                 else:
                     raise ValueError("Transform {} not found".format(transform))
         output_transform = transforms.Compose(output_transform)
