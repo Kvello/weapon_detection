@@ -21,7 +21,7 @@ import torch
 @click.option('--config', type=str, default='config.json', help='Path to config file for specifying new model architectures')
 @click.option('--log_dir', type=str, default='logs', help='Path to log directory')
 @click.option('--loglevel', type=str, default='INFO', help='Log level')
-def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluate, config, log_dir, loglevel, seed):
+def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, config, log_dir, loglevel, seed):
     # Set seed for reproducibility
     torch.manual_seed(seed)
 
