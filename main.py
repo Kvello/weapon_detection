@@ -83,6 +83,7 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
             model = model.to(config["device"])
         else:
             model = model.to("cuda" if torch.cuda.is_available() else "cpu")
+        print("Model: ",model)
         training_config = config['training']
         input_transform = []
         if "input_transform" in config:
