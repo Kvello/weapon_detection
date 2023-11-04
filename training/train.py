@@ -23,10 +23,15 @@ class EarlyStopper:
         self.min_validation_loss = float('inf')
 
     def early_stop(self, val_result:ValidationResult,quiet=False):
-        if val_result[self.metric] < self.min_validation_loss:
-            self.min_validation_loss = val_result[self.metric]
+        val = 0
+        if self.metric == "loss":
+            val = val_result.loss
+        else:
+            val = val_result.accuracy
+        if val < self.min_validation_loss:
+            self.min_validation_loss = val
             self.counter = 0
-        elif val_result[self.metric]> (self.min_validation_loss + self.min_delta):
+        elif val> (self.min_validation_loss + self.min_delta):
             self.counter += 1
             if not quiet:
                 print("Validation loss increased, counter: {}".format(self.counter))
@@ -174,7 +179,7 @@ def train(model:nn.Module,
             print("Epoch {}: Loss: {}".format(epoch,epoch_loss))
             if valloader is not None:
                 val_results= validate(model,valloader,loss_fn,device)
-                print("Validation loss: {}, Validation accuracy: {}".format(val_results["loss"],val_results["accuracy"]))
+                print("Validation loss: {}, Validation accuracy: {}".format(val_results.loss,val_results.accuracy))
         if early_stopper is not None:
             if early_stopper.early_stop(val_results,quiet):
                 print("Early stopping")
