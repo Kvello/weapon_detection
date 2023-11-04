@@ -84,7 +84,7 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
             model = model.to(config["device"])
         else:
             model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-        print("Model: ",model)
+        print("Model: ", model)
         training_config = config['training']
         input_transform = []
         if "input_transform" in config:
@@ -109,10 +109,6 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
 
         dataloader = torchvision.datasets.ImageFolder(
             train_dir, transform=input_transform, target_transform=output_transform)
-        training_config.pop('batch_size')
-        training_config.pop('shuffle')
-        training_config.pop('num_workers')
-        training_config["device"] = config["device"]
 
         if "early_stopper" in training_config:
             if "train_data_split" not in config:
@@ -129,11 +125,16 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
                 valloader, batch_size=training_config['batch_size'],
                 shuffle=training_config['shuffle'],
                 num_workers=training_config['num_workers'])
-            
+
         dataloader = torch.utils.data.DataLoader(
-            dataloader, batch_size=training_config['batch_size'], 
-            shuffle=training_config['shuffle'], 
+            dataloader, batch_size=training_config['batch_size'],
+            shuffle=training_config['shuffle'],
             num_workers=training_config['num_workers'])
+
+        training_config.pop('batch_size')
+        training_config.pop('shuffle')
+        training_config.pop('num_workers')
+        training_config["device"] = config["device"]
 
         train.train(model, dataloader, **training_config)
         if save_model:
