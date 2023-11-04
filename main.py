@@ -146,6 +146,10 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
                 torch.save(model, model_path+"_"+now_str)
             else:
                 torch.save(model, model_path)
+                torch.save({
+                'model_state_dict': model.state_dict()},
+                model_path+"_state_dict")
+
     if evaluate:
         dataloader = torchvision.datasets.ImageFolder(
             test_dir, transform=input_transform)
