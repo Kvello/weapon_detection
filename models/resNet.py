@@ -68,7 +68,6 @@ class ResidualBlock(nn.Module):
 
         out = x
         for layer in self.layers:
-            print(out.shape)
             out = layer(out)
 
         out = out + shortcut
@@ -160,7 +159,5 @@ class ResidualNetwork(nn.Module):
     def forward(self, x):
         out = x
         for block in self.blocks:
-            print(block,out.shape)
             out = block(out)
-            print("After block: ",out.shape)
         return out
