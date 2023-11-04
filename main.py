@@ -16,7 +16,6 @@ import torch
 @click.option('--seed', type=int, default=1, help='Random seed')
 @click.option('--save_model', type=bool, default=False, help='Whether to save the model')
 @click.option('--model_path', type=str, default='model.pt', help='Path to save/load the model')
-@click.option('--model', type=str, default='resnet18', help='Model to use')
 @click.option('--load_model', type=bool, default=False, help='Whether to load the model')
 @click.option('--evaluate', type=bool, default=True, help='Whether to evaluate the model')
 @click.option('--config', type=str, default='config.json', help='Path to config file for specifying new model architectures')
@@ -37,7 +36,9 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
     log_file_name = 'log'+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.log'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    file_handler = logging.FileHandler(os.path.join(log_dir,'log'+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.log'))
+    if not os.path.exists(os.path.join(log_dir,log_file_name)):
+        open(os.path.join(log_dir,log_file_name), 'a').close()
+    file_handler = logging.FileHandler(os.path.join(log_dir,log_file_name))
     file_handler.setLevel(logging.DEBUG)  # Capture all logs
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
@@ -54,11 +55,14 @@ def main(train_dir, test_dir, save_model, model_path, model, load_model, evaluat
     if load_model:
         model = models.load_model(model_path)
     else:
-        if not hasattr(models,model):
-            raise ValueError('Model {} not found'.format(model))
         config = json.load(open(config))
         model_config = config['model']
-        model = getattr(models,model)(**model_config)
+        if "type" not in model_config.keys():
+            raise ValueError("Model type not specified")
+        if hasattr(models,model_config['type']):
+            model = getattr(models,model_config['type'])(**model_config['args'])
+        elif hasattr(torchvision.models,model_config['type']):
+            model = getattr(torchvision.models,model_config['type'])(**model_config['args'])
         if "device" in config:
             if config["device"] == "cuda" and not torch.cuda.is_available():
                 raise ValueError("CUDA not available")
