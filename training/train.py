@@ -24,9 +24,11 @@ class EarlyStopper:
             self.counter = 0
         elif validation_loss > (self.min_validation_loss + self.min_delta):
             self.counter += 1
-            print("Validation loss increased, counter: {}".format(self.counter))
+            if not quiet:
+                print("Validation loss increased, counter: {}".format(self.counter))
             if self.counter >= self.patience:
-                print("Count: {}, Patience: {} - quitting".format(self.counter,self.patience))
+                if not quiet:
+                    print("Count: {}, Patience: {} - quitting".format(self.counter,self.patience))
                 return True
         return False
 
@@ -157,7 +159,6 @@ def train(model:nn.Module,
             optimizer.zero_grad()
             y_pred = model(x)
             ls = loss_fn(y_pred,y)
-            print(ls)
             epoch_loss += ls.item()
             ls.backward()
             optimizer.step()
@@ -171,7 +172,7 @@ def train(model:nn.Module,
                 val_loss, val_accuracy = validate(model,valloader,loss_fn,device)
                 print("Validation loss: {}, Validation accuracy: {}".format(val_loss,val_accuracy))
         if early_stopper is not None:
-            if early_stopper.early_stop(val_loss):
+            if early_stopper.early_stop(val_loss,quiet):
                 print("Early stopping")
                 break
         if plot_loss:
