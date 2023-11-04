@@ -4,14 +4,61 @@ import logging
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as data
+import torch
 from torchvision import datasets, transforms
 from tqdm import tqdm
 from typing import Dict, Union, Tuple
 from collections import deque
 import matplotlib.pyplot as plt
 
+class EarlyStopper:
+    def __init__(self, patience=1, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = float('inf')
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+
+def validate(model:nn.Module,
+             valloader:data.DataLoader,
+                loss_fn:nn.Module,
+                device:str="cpu",
+                ):
+    r"""
+    General purpose validation function
+    Args:
+        model (nn.Module): Model to validate
+        valloader (data.DataLoader): Validation dataset
+        loss_fn (nn.Module): Loss function to use
+        device (str): Device to use for validation. Default: 'cpu'
+    """
+    model.eval()
+    loss = 0
+    correct = 0
+    with torch.no_grad():
+        for x,y in valloader:
+            x = x.to(device)
+            y = y.to(device)
+            y_pred = model(x)
+            loss += loss_fn(y_pred,y).item()
+            pred = y_pred.argmax(dim=1,keepdim=True)
+            correct += pred.eq(y.view_as(pred)).sum().item()
+    loss /= len(valloader.dataset)
+    accuracy = correct / len(valloader.dataset)
+    return loss, accuracy
+
 def train(model:nn.Module,
           dataloader:data.DataLoader,
+          valloader:data.DataLoader=None,
           epochs:int=100,
           lr:Union[float,Tuple[float,lr_scheduler.LRScheduler],Tuple[float,str]]=0.001,
           momentum:float=0,
@@ -21,6 +68,7 @@ def train(model:nn.Module,
           optimizer:str="sgd",
           plot_loss:bool=False,
           quiet:bool=False,
+          early_stopper:EarlyStopper=None
           ):
     r"""
     General purpose training function
@@ -113,6 +161,13 @@ def train(model:nn.Module,
                 scheduler.step()
         if not quiet:
             print("Epoch {}: Loss: {}".format(epoch,loss.item()))
+            if valloader is not None:
+                val_loss, val_accuracy = validate(model,valloader,loss_fn,device)
+                print("Validation loss: {}, Validation accuracy: {}".format(val_loss,val_accuracy))
+        if early_stopper is not None:
+            if early_stopper.early_stop(val_loss):
+                print("Early stopping")
+                break
         if plot_loss:
             loss_history.append(loss.item())
             line.set_xdata(range(len(loss_history)))

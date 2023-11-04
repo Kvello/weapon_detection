@@ -17,7 +17,7 @@ import torch
 @click.option('--test_dir', type=str, default='data/raw/test', help='Path to test dataset')
 @click.option('--seed', type=int, default=1, help='Random seed')
 @click.option('--save_model', type=bool, default=False, help='Whether to save the model')
-@click.option('--model_path', type=str, default='model.pt', help='Path to save/load the model')
+@click.option('--model_path', type=str, default='models/model.pt', help='Path to save/load the model')
 @click.option('--load_model', type=bool, default=False, help='Whether to load the model')
 @click.option('--evaluate', type=bool, default=True, help='Whether to evaluate the model')
 @click.option('--config', type=str, default='config.json', help='Path to config file for specifying new model architectures')
@@ -117,6 +117,21 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
         training_config.pop('shuffle')
         training_config.pop('num_workers')
         training_config["device"] = config["device"]
+
+        if "early_stopper" in training_config:
+            if "train_data_split" not in config:
+                raise ValueError(
+                    "train_data_split must be specified for early stopping")
+            training_config["early_stopper"] = train.EarlyStopper(
+                **training_config["early_stopper"])
+            tr_size, vl_size = config["train_data_split"].values()
+            tr_size = int(tr_size*len(dataloader))
+            vl_size = int(vl_size*len(dataloader))
+            dataloader, valloader = torch.utils.data.random_split(
+                dataloader, [tr_size, vl_size])
+            training_config["valloader"] = valloader
+            
+
         train.train(model, dataloader, **training_config)
         if save_model:
             if os.path.exists(model_path):
