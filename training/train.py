@@ -18,13 +18,15 @@ class EarlyStopper:
         self.counter = 0
         self.min_validation_loss = float('inf')
 
-    def early_stop(self, validation_loss):
+    def early_stop(self, validation_loss,quiet=False):
         if validation_loss < self.min_validation_loss:
             self.min_validation_loss = validation_loss
             self.counter = 0
         elif validation_loss > (self.min_validation_loss + self.min_delta):
             self.counter += 1
+            print("Validation loss increased, counter: {}".format(self.counter))
             if self.counter >= self.patience:
+                print("Count: {}, Patience: {} - quitting".format(self.counter,self.patience))
                 return True
         return False
 
@@ -52,7 +54,7 @@ def validate(model:nn.Module,
             loss += loss_fn(y_pred,y).item()
             pred = y_pred.argmax(dim=1,keepdim=True)
             correct += pred.eq(y.view_as(pred)).sum().item()
-    loss /= len(valloader.dataset)
+    loss /= len(valloader)
     accuracy = correct / len(valloader.dataset)
     return loss, accuracy
 
