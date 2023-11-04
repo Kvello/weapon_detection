@@ -27,7 +27,7 @@ class ResidualBlock(nn.Module):
                  bias=False,
                  batchnorm=True,
                  dropout_prob=None,
-                 activation=nn.ReLU,
+                 activation=nn.ReLU(),
                  depth=2,
                  padding_mode='zeros'):
         assert (depth >= 1)
@@ -101,7 +101,7 @@ class ResidualNetwork(nn.Module):
                  block_list: Union[List[Tuple[int, int, int]], List[ResidualBlock]] = [(64, 1, 2), (64, 2, 2), (128, 1, 2), (128, 2, 2),(256, 1, 2), (256, 2, 2), (512, 1, 2), (512, 2, 2)],
                  bias=False,
                  batchnorm=True, dropout_prob=None,
-                 activation=nn.ReLU,
+                 activation=nn.ReLU(),
                  padding_mode='zeros'):
         super().__init__()
 
