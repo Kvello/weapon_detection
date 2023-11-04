@@ -27,7 +27,7 @@ class ResidualBlock(nn.Module):
                  bias=False,
                  batchnorm=True,
                  dropout_prob=None,
-                 activation=nn.ReLU(),
+                 activation=nn.ReLU,
                  depth=2,
                  padding_mode='zeros'):
         assert (depth >= 1)
@@ -59,7 +59,7 @@ class ResidualBlock(nn.Module):
                                          bias=bias))
             if batchnorm:
                 self.layers.append(nn.BatchNorm2d(out_channels))
-            self.layers.append(activation())
+            self.layers.append(activation)
             if dropout_prob is not None:
                 self.layers.append(nn.Dropout2d(p=dropout_prob))
 
@@ -95,19 +95,16 @@ class ResidualNetwork(nn.Module):
     # TODO: Add support for different kernel sizes and paddings?
 
     def __init__(self, num_classes: int,
-                 image_size: Tuple[int, int, int] = (3, 224, 224),
-                 start_block: Union[Tuple[int, int, int,int],
-                                     nn.Module] = (64, 7, 2, 1),
-                 block_list: Union[List[Tuple[int, int, int]], List[ResidualBlock]] =
-                 [(64, 1, 2), (64, 2, 2), (128, 1, 2), (128, 2, 2),
-                  (256, 1, 2), (256, 2, 2), (512, 1, 2)(512, 2, 2)],
+                 img_size: Tuple[int, int, int] = (3, 224, 224),
+                 start_block: Union[Tuple[int, int, int,int],nn.Module] = (64, 7, 2, 1),
+                 block_list: Union[List[Tuple[int, int, int]], List[ResidualBlock]] = [(64, 1, 2), (64, 2, 2), (128, 1, 2), (128, 2, 2),(256, 1, 2), (256, 2, 2), (512, 1, 2), (512, 2, 2)],
                  bias=False,
                  batchnorm=True, dropout_prob=None,
                  activation=nn.ReLU(),
                  padding_mode='zeros'):
         super().__init__()
 
-        self.in_channels = image_size[0]
+        self.in_channels = img_size[0]
         self.num_classes = num_classes
         self.bias = bias
         self.batchnorm = batchnorm
@@ -127,6 +124,7 @@ class ResidualNetwork(nn.Module):
             img_size = (img_size-(start_block[1]//2)*2)//start_block[2]
         self.blocks.append(nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
         img_size = (img_size-(3//2)*2)//2
+        in_chn = start_block[0]
         for block in block_list:
             if isinstance(block, nn.Module):
                 self.add_block(block)

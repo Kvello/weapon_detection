@@ -1,5 +1,6 @@
 import click
-from .models import *
+import models
+import importlib
 from training import train
 import torchvision, torchvision.transforms as transforms
 import json
@@ -59,11 +60,18 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
         model_config = config['model']
         if "type" not in model_config.keys():
             raise ValueError("Model type not specified")
-        if hasattr(models,model_config['type']):
-            model = getattr(models,model_config['type'])(**model_config['args'])
-        elif hasattr(torchvision.models,model_config['type']):
+        found = False
+        for file in os.listdir("models"):
+            if file.endswith(".py"):
+                module = importlib.import_module("models."+file[:-3])
+                if hasattr(module,model_config['type']):
+                    model = getattr(module,model_config['type'])(**model_config['args'])
+                    found = True
+                    break
+        if hasattr(torchvision.models,model_config['type']):
             model = getattr(torchvision.models,model_config['type'])(**model_config['args'])
-        else:
+            found = True
+        if not found:
             raise ValueError("Model {} not found".format(model_config['type']))
         if "device" in config:
             if config["device"] == "cuda" and not torch.cuda.is_available():
