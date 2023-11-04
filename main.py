@@ -63,6 +63,8 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
             model = getattr(models,model_config['type'])(**model_config['args'])
         elif hasattr(torchvision.models,model_config['type']):
             model = getattr(torchvision.models,model_config['type'])(**model_config['args'])
+        else:
+            raise ValueError("Model {} not found".format(model_config['type']))
         if "device" in config:
             if config["device"] == "cuda" and not torch.cuda.is_available():
                 raise ValueError("CUDA not available")
