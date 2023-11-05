@@ -1,15 +1,16 @@
 import click
-import models
+import pickle
 import importlib
 from training import train
 import torchvision
 import torchvision.transforms as transforms
 import json
-import models
 import os
 import logging
+import evaluate
 from datetime import datetime
 import torch
+import torch.nn as nn
 
 
 @click.command()
@@ -17,13 +18,13 @@ import torch
 @click.option('--test_dir', type=str, default='data/raw/test', help='Path to test dataset')
 @click.option('--seed', type=int, default=1, help='Random seed')
 @click.option('--save_model', type=bool, default=False, help='Whether to save the model')
-@click.option('--model_path', type=str, default='models/model.pt', help='Path to save/load the model')
+@click.option('--model_path', type=str, default='models/model.pth', help='Path to save/load the model')
 @click.option('--load_model', type=bool, default=False, help='Whether to load the model')
-@click.option('--evaluate', type=bool, default=True, help='Whether to evaluate the model')
+@click.option('--eval', type=bool, default=True, help='Whether to evaluate the model')
 @click.option('--config', type=str, default='config.json', help='Path to config file for specifying new model architectures')
 @click.option('--log_dir', type=str, default='logs', help='Path to log directory')
 @click.option('--loglevel', type=str, default='INFO', help='Log level')
-def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, config, log_dir, loglevel, seed):
+def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, log_dir, loglevel, seed):
     # Set seed for reproducibility
     torch.manual_seed(seed)
     torch.autograd.set_detect_anomaly(True)
@@ -57,7 +58,8 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
     logger.addHandler(console_handler)
 
     if load_model:
-        model = models.load_model(model_path)
+        with open(model_path, "rb") as file:
+            model = pickle.load(file)
     else:
         config = json.load(open(config))
         model_config = config['model']
@@ -150,7 +152,7 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
                 'model_state_dict': model.state_dict()},
                 model_path+"_state_dict")
 
-    if evaluate:
+    if eval:
         dataloader = torchvision.datasets.ImageFolder(
             test_dir, transform=input_transform)
         dataloader = torch.utils.data.DataLoader(
@@ -158,43 +160,11 @@ def main(train_dir, test_dir, save_model, model_path, load_model, evaluate, conf
             shuffle=training_config['shuffle'],
             num_workers=training_config['num_workers'])
         model.eval()
-        correct = 0
-        total = 0
-        class_correct = list(0. for i in range(
-            len(dataloader.dataset.classes)))
-        class_total = list(0. for i in range(len(dataloader.dataset.classes)))
+        val_res = evaluate.validate(model, dataloader, nn.CrossEntropyLoss(), config["device"])
+        print("Validation loss: {}, Validation accuracy: {}".format(val_res.loss, val_res.accuracy))
+        conf_matrix = evaluate.generate_conf_matrix(model, dataloader, config["device"],normalize=False)
+        print(conf_matrix)
 
-        with torch.no_grad():
-            for data in dataloader:
-                images, labels = data
-                images = images.to(
-                    "cuda" if torch.cuda.is_available() else "cpu")
-                labels = labels.to(
-                    "cuda" if torch.cuda.is_available() else "cpu")
-                outputs = model(images)
-                _, predicted = torch.argmax(outputs.data, 1)
-                total += labels.size(0)
-                compare = predicted == labels
-                correct += compare.sum().item()
-                c = compare.squeeze()
-                for i in range(len(labels)):
-                    label = labels[i]
-                    class_correct[label] += c[i].item()
-                    class_total[label] += 1
-        print('Accuracy of the network on the {} test images: {} %'.format(
-            total, 100 * correct / total))
-        with torch.no_grad():
-            for data in dataloader:
-                images, labels = data
-                images = images.to(
-                    "cuda" if torch.cuda.is_available() else "cpu")
-                labels = labels.to(
-                    "cuda" if torch.cuda.is_available() else "cpu")
-                outputs = model(images)
-                _, predicted = torch.max(outputs, 1)
-        for i in range(len(dataloader.dataset.classes)):
-            print('Accuracy of {} : {} %'.format(
-                dataloader.dataset.classes[i], 100 * class_correct[i] / class_total[i]))
 
 
 if __name__ == '__main__':
