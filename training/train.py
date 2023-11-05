@@ -10,9 +10,7 @@ from tqdm import tqdm
 from typing import Dict, Union, Tuple
 from collections import deque
 import matplotlib.pyplot as plt
-from collections import namedtuple
-
-ValidationResult = namedtuple("ValidationResult",["loss","accuracy"])
+from .. import evaluate
 
 class EarlyStopper:
     def __init__(self, patience=1, min_delta=0, metric="loss"):
@@ -22,7 +20,7 @@ class EarlyStopper:
         self.metric = metric
         self.min_validation_loss = float('inf')
 
-    def early_stop(self, val_result:ValidationResult,quiet=False):
+    def early_stop(self, val_result:evaluate.ValidationResult,quiet=False):
         val = 0
         if self.metric == "loss":
             val = val_result.loss
@@ -40,34 +38,6 @@ class EarlyStopper:
                     print("Count: {}, Patience: {} - quitting".format(self.counter,self.patience))
                 return True
         return False
-
-def validate(model:nn.Module,
-             valloader:data.DataLoader,
-                loss_fn:nn.Module,
-                device:str="cpu")->ValidationResult:
-    r"""
-    General purpose validation function
-    Args:
-        model (nn.Module): Model to validate
-        valloader (data.DataLoader): Validation dataset
-        loss_fn (nn.Module): Loss function to use
-        device (str): Device to use for validation. Default: 'cpu'
-    """
-    model.eval()
-    loss = 0
-    correct = 0
-    with torch.no_grad():
-        for x,y in valloader:
-            x = x.to(device)
-            y = y.to(device)
-            y_pred = model(x)
-            loss += loss_fn(y_pred,y).item()
-            pred = y_pred.argmax(dim=1,keepdim=True)
-            correct += pred.eq(y.view_as(pred)).sum().item()
-    loss /= len(valloader)
-    accuracy = correct / len(valloader.dataset)
-
-    return ValidationResult(loss,accuracy)
 
 def train(model:nn.Module,
           dataloader:data.DataLoader,
@@ -177,7 +147,7 @@ def train(model:nn.Module,
         if not quiet:
             print("Epoch {}: Loss: {}".format(epoch,epoch_loss))
             if valloader is not None:
-                val_results= validate(model,valloader,loss_fn,device)
+                val_results= evaluate.validate(model,valloader,loss_fn,device)
                 print("Validation loss: {}, Validation accuracy: {}".format(val_results.loss,val_results.accuracy))
         if early_stopper is not None:
             if early_stopper.early_stop(val_results,quiet):
