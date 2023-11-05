@@ -10,7 +10,18 @@ from tqdm import tqdm
 from typing import Dict, Union, Tuple
 from collections import deque
 import matplotlib.pyplot as plt
-from .. import evaluate
+import sys
+from pathlib import Path
+
+# Get the directory of the current file
+current_file_path = Path(__file__).resolve()
+
+# Get the parent directory of the directory where the current file is located
+parent_dir = current_file_path.parent.parent  # You can chain .parent to go as many levels up as needed
+
+# Add the parent directory to sys.path
+sys.path.append(str(parent_dir))
+import evaluate
 
 class EarlyStopper:
     def __init__(self, patience=1, min_delta=0, metric="loss"):
