@@ -147,12 +147,16 @@ def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, 
                 model_path+"_state_dict")
     if eval:
         model.eval()
+        eval_transform = torchvision.transforms.Compose([
+            torchvision.transforms.Resize((224,224)),
+            torchvision.transforms.ToTensor()
+        ])
         dataloader = torchvision.datasets.ImageFolder(
-            test_dir, transform=input_transform)
+            test_dir, transform = eval_transform)
         dataloader = torch.utils.data.DataLoader(
-            dataloader, batch_size=training_config['batch_size'],
-            shuffle=training_config['shuffle'],
-            num_workers=training_config['num_workers'])
+            dataloader, batch_size=32,
+            shuffle=False,
+            num_workers=1)
         model.eval()
         val_res = evaluate.validate(model, dataloader, nn.CrossEntropyLoss(), config["device"])
         print("Validation loss: {}, Validation accuracy: {}".format(val_res.loss, val_res.accuracy))
