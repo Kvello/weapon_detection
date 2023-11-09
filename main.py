@@ -57,36 +57,35 @@ def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, 
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
-    if load_model:
-        with open(model_path, "rb") as file:
-            model = pickle.load(file)
+    config = json.load(open(config))
+    model_config = config['model']
+    if "type" not in model_config.keys():
+        raise ValueError("Model type not specified")
+    found = False
+    for file in os.listdir("models"):
+        if file.endswith(".py"):
+            module = importlib.import_module("models."+file[:-3])
+            if hasattr(module, model_config['type']):
+                model = getattr(module, model_config['type'])(
+                    **model_config['args'])
+                found = True
+                break
+    if hasattr(torchvision.models, model_config['type']):
+        model = getattr(torchvision.models, model_config['type'])(
+            **model_config['args'])
+        found = True
+    if not found:
+        raise ValueError("Model {} not found".format(model_config['type']))
+    if "device" in config:
+        if config["device"] == "cuda" and not torch.cuda.is_available():
+            raise ValueError("CUDA not available")
+        model = model.to(config["device"])
     else:
-        config = json.load(open(config))
-        model_config = config['model']
-        if "type" not in model_config.keys():
-            raise ValueError("Model type not specified")
-        found = False
-        for file in os.listdir("models"):
-            if file.endswith(".py"):
-                module = importlib.import_module("models."+file[:-3])
-                if hasattr(module, model_config['type']):
-                    model = getattr(module, model_config['type'])(
-                        **model_config['args'])
-                    found = True
-                    break
-        if hasattr(torchvision.models, model_config['type']):
-            model = getattr(torchvision.models, model_config['type'])(
-                **model_config['args'])
-            found = True
-        if not found:
-            raise ValueError("Model {} not found".format(model_config['type']))
-        if "device" in config:
-            if config["device"] == "cuda" and not torch.cuda.is_available():
-                raise ValueError("CUDA not available")
-            model = model.to(config["device"])
-        else:
-            model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-        print("Model: ", model)
+        model = model.to("cuda" if torch.cuda.is_available() else "cpu")
+    print("Model: ", model)
+    if load_model:
+        model.load_state_dict(torch.load(model_path,map_location = torch.device(config["device"])))
+    else:
         training_config = config['training']
         input_transform = []
         if "input_transform" in config:
@@ -108,10 +107,8 @@ def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, 
                     raise ValueError(
                         "Transform {} not found".format(transform))
         output_transform = transforms.Compose(output_transform)
-
         dataloader = torchvision.datasets.ImageFolder(
             train_dir, transform=input_transform, target_transform=output_transform)
-
         if "early_stopper" in training_config:
             if "train_data_split" not in config:
                 raise ValueError(
@@ -127,17 +124,14 @@ def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, 
                 valloader, batch_size=training_config['batch_size'],
                 shuffle=training_config['shuffle'],
                 num_workers=training_config['num_workers'])
-
         dataloader = torch.utils.data.DataLoader(
             dataloader, batch_size=training_config['batch_size'],
             shuffle=training_config['shuffle'],
             num_workers=training_config['num_workers'])
-
         training_config.pop('batch_size')
         training_config.pop('shuffle')
         training_config.pop('num_workers')
         training_config["device"] = config["device"]
-
         train.train(model, dataloader, **training_config)
         if save_model:
             if os.path.exists(model_path):
@@ -145,14 +139,14 @@ def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, 
                 now = datetime.now()
                 # Format it as a string
                 now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-                torch.save(model, model_path+"_"+now_str)
+                torch.save(model.state_dict(), model_path+"_"+now_str)
             else:
-                torch.save(model, model_path)
+                torch.save(model.state_dict(), model_path)
                 torch.save({
                 'model_state_dict': model.state_dict()},
                 model_path+"_state_dict")
-
     if eval:
+        model.eval()
         dataloader = torchvision.datasets.ImageFolder(
             test_dir, transform=input_transform)
         dataloader = torch.utils.data.DataLoader(
