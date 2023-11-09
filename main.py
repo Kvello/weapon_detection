@@ -158,10 +158,10 @@ def main(train_dir, test_dir, save_model, model_path, load_model, eval, config, 
             shuffle=False,
             num_workers=1)
         model.eval()
-        val_res = evaluate.validate(model, dataloader, nn.CrossEntropyLoss(), config["device"])
-        print("Validation loss: {}, Validation accuracy: {}".format(val_res.loss, val_res.accuracy))
         conf_matrix = evaluate.generate_conf_matrix(model, dataloader, config["device"],normalize=False)
+        accuracy = sum([conf_matrix[i][i] for i in range(len(conf_matrix))])/sum(sum(conf_matrix))
         print(conf_matrix)
+        print(accuracy)
 
 
 

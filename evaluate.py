@@ -51,15 +51,13 @@ def generate_conf_matrix(model:nn.Module,
     with torch.no_grad():
         for x,y in loader:
             x = x.to(device)
-            y = y.to(device).item()
+            y = y.to(device)
             y_pred = model(x)
-            pred = y_pred.argmax(dim=1,keepdim=True).item()
-            if not isinstance(pred,int) or pred >= len(classes):
-                raise ValueError("Invalid prediction: {}".format(pred))
-            if not isinstance(y,int) or y >= len(classes):
-                raise ValueError("Invalid label: {}".format(y.item()))
-            matrix[y,pred] += 1
+            pred = y_pred.argmax(dim=1,keepdim=True)
+            for target, prediction in zip(y,pred):
+                matrix[target,prediction] += 1
     if normalize:
         matrix = matrix / matrix.sum(axis=1)
+    return matrix
 
     
